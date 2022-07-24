@@ -13,3 +13,5 @@ const client = new TwitterApi({
 })
 
 const mnClient = client.readWrite
+
+module.exports = mnClient

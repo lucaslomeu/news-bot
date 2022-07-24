@@ -40,13 +40,17 @@ const getNews = async () => {
         const id = story.data.id
 
         // Check if the story is new
-        if (previousId && id !== previousId) {
+        // I need check if previousId is undefined because the first time the program is run. The previousId is undefined and the program will post the first story
+
+        if (id !== previousId) {
+          // Alert the user that a new story has been posted
           console.log("New story! Let's tweet it!")
-          console.log('id', id)
-          console.log('previousId', previousId)
+
           // Post the story to Twitter
-          mnClient.v1.tweet(`"${title}" ${url}`)
-          previousId = id // Save the ID to compare with the next one
+          mnClient.v1.tweet(`"${title}" ${url && url}`)
+
+          // Save the ID to compare with the next one
+          previousId = id
         } else {
           console.log("No new stories! Let's wait for a new one in a minute!")
         }
