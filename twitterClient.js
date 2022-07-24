@@ -1,12 +1,15 @@
+// Dotenv environment variables
+require('dotenv').config()
+
+// TwitterApi handles the communication with the Twitter API
 const { TwitterApi } = require('twitter-api-v2')
 
+// Client with the Twitter API credentials
 const client = new TwitterApi({
-  appKey: '10075OXJ29oqGgwWKEFVWD8wa',
-  appSecret: 'rQjBdoFm6yPFTSAYdLeeB64qn9NAu6BjDB1fIvTwkGbs6qGxaw',
-  acessToken: '1181549305938747394-SVZAoBOr55VEaM18U5SWdnKlYHHnsC',
-  acessSecret: 'xD5UZvaJ4QDYPHwPzqUoGVAcbLn0yYd0oqXnCMHKsG4EZ'
+  appKey: process.env.APP_KEY,
+  appSecret: process.env.APP_SECRET,
+  accessToken: process.env.ACCESS_TOKEN,
+  accessSecret: process.env.ACCESS_SECRET
 })
 
-const rwClient = client.readWrite
-
-module.exports = rwClient
+const mnClient = client.readWrite
