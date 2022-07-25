@@ -12,6 +12,6 @@ const client = new TwitterApi({
   accessSecret: process.env.ACCESS_SECRET
 })
 
-const mnClient = client.readWrite
+const TwitterClient = client.readWrite
 
-module.exports = mnClient
+module.exports = TwitterClient

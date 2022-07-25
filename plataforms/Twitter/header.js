@@ -5,7 +5,7 @@ const axios = require('axios')
 const CronJob = require('cron').CronJob
 
 // TwitterClient is a const that contains the Twitter API credentials
-const mnClient = require('../../twitterClient.js')
+const TwitterClient = require('./client.js')
 
 // Change header twitter each 24 hours
 // Tags: news, technology, newspapper
@@ -33,19 +33,24 @@ const headerAndUpdateProfileBanner = async imageUrl => {
     })
     .then(response => {
       const returnBuffer = Buffer.from(response.data)
-      mnClient.v1.updateAccountProfileBanner(returnBuffer)
+      TwitterClient.v1.updateAccountProfileBanner(returnBuffer)
     })
     .catch(err => console.error(err))
 }
 
-const getRandomImage = () => {
-  return axios
-    .get(searchUrl, configAxios)
-    .then(response => {
-      const randomPhoto = randomize(response.data.photos)
-      headerAndUpdateProfileBanner(randomPhoto.src.landscape)
-    })
-    .catch(err => console.error(err))
+const updateHeader = () => {
+  console.log('Updating the header!')
+  const getRandomImage = () => {
+    return axios
+      .get(searchUrl, configAxios)
+      .then(response => {
+        const randomPhoto = randomize(response.data.photos)
+        headerAndUpdateProfileBanner(randomPhoto.src.landscape)
+      })
+      .catch(err => console.error(err))
+  }
+
+  new CronJob('0 1 * * *', getRandomImage).start()
 }
 
-new CronJob('0 1 * * *', getRandomImage).start()
+module.exports = updateHeader
