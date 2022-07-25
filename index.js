@@ -4,6 +4,9 @@ const axios = require('axios')
 // TwitterClient is a const that contains the Twitter API credentials
 const mnClient = require('./twitterClient.js')
 
+// Cron job to post scheduled tweets
+const CronJob = require('cron').CronJob
+
 // The following function is used to get the tweets from the API
 const getNews = async () => {
   // Most recents stories from the HackerNews
@@ -46,8 +49,13 @@ const getNews = async () => {
           // Alert the user that a new story has been posted
           console.log("New story! Let's tweet it!")
 
-          // Post the story to Twitter
-          mnClient.v1.tweet(`"${title}" ${url && url}`)
+          // Dont tweet title includes "Ask HN or Show HN"
+          if (title.includes('Ask HN') || title.includes('Show HN')) {
+            console.log('This story is not worth tweeting')
+          } else {
+            // Post the story to Twitter
+            mnClient.v1.tweet(`"${title}" ${url !== undefined && url}`)
+          }
 
           // Save the ID to compare with the next one
           previousId = id
@@ -57,9 +65,41 @@ const getNews = async () => {
       })
   }
 
+  const scheduleTweet = () => {
+    console.log(
+      'Cron job is running! We will tweet every morning at 5:00 AM and 11:00 PM'
+    )
+
+    // Post the good morning tweet
+    const morningTweet = new CronJob('0 5 * * * *', () => {
+      mnClient.v1.tweet("Good morning! Let's get the news!")
+    })
+
+    // Post the good morning tweet
+    const nightTweet = new CronJob('0 23 * * * *', () => {
+      mnClient.v1.tweet("Good night! Let's go to the bed!")
+    })
+
+    // Post the tweet for weekend
+    const weekendTweet = new CronJob('0 18 * * * 5', () => {
+      mnClient.v1.tweet('Enjoy the weekend!')
+    })
+
+    // Post the tweet for start of the week
+    const startWeek = new CronJob('0 4 * * * 2', () => {
+      mnClient.v1.tweet("Good week for everyone! Let's start a new one!")
+    })
+
+    const scheduleOptions = [morningTweet, nightTweet, weekendTweet, startWeek]
+
+    // Start the cron job
+    scheduleOptions.forEach(schedule => schedule.start())
+  }
+
   // Repeat the function every minute
+  scheduleTweet()
   setInterval(postTweet, 60000)
 }
 
-// Run the function
+// Run the global function
 getNews()
