@@ -4,10 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index",
-    "heroku-postbuild": "npm install
+    "start": "node index"
   },
-  "heroku-run-build-script": true,
   "keywords": [],
   "author": "",
   "license": "ISC",
