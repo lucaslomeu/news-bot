@@ -1,61 +1,43 @@
 import os
 import requests
-import tweepy
 from dotenv import load_dotenv
+from telegram import Bot
+
 load_dotenv()
+
+LAST_ID_PATH = "/tmp/last_id.txt"
+
+bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN"))
+chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
 def get_last_posted_id():
     try:
-        with open("last_id.txt", "r") as f:
+        with open(LAST_ID_PATH, "r") as f:
             return int(f.read().strip())
     except FileNotFoundError:
         return None
-       
+
 def save_last_posted_id(story_id):
-    with open("last_id.txt", "w") as f:
+    with open(LAST_ID_PATH, "w") as f:
         f.write(str(story_id))
 
 def get_latest_stories():
-    url = "https://hacker-news.firebaseio.com/v0/newstories.json?print=pretty"
+    url = "https://hacker-news.firebaseio.com/v0/newstories.json"
     response = requests.get(url)
-
-    if response.status_code != 200:
-        print("Failed to fetch top news stories")
-        return []
-    
-    return response.json()
+    return response.json() if response.ok else []
 
 def get_story_details(story_id):
-    url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json?print=pretty"
+    url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
     response = requests.get(url)
+    return response.json() if response.ok else None
 
-    if response.status_code != 200:
-        print(f"Failed to fetch story details for ID {story_id}")
-        return None
-    
-    return response.json()
-
-def post_to_twitter(title, url):
-    # Twitter API credentials
-    consumer_key = os.getenv("TWITTER_CONSUMER_KEY")
-    consumer_secret = os.getenv("TWITTER_CONSUMER_SECRET")
-    access_token = os.getenv("TWITTER_ACCESS_TOKEN")
-    access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
-
-    if not all([consumer_key, consumer_secret, access_token, access_token_secret]):
-        print("Twitter API credentials are not set in environment variables.")
-        return
-
-    auth = tweepy.OAuth1UserHandler(consumer_key, consumer_secret, access_token, access_token_secret)
-    api = tweepy.API(auth)
-
-    tweet = f"{title} {url}"
-    api.update_status(tweet)
-    print("Tweeted:", tweet)
+def post_to_telegram(title, url):
+    message = f"{title}\n{url}"
+    bot.send_message(chat_id=chat_id, text=message)
+    print("Enviado pro Telegram:", message)
 
 def run_bot():
     last_post_id = get_last_posted_id()
-
     latest_news = get_latest_stories()
 
     for story_id in latest_news:
@@ -66,13 +48,12 @@ def run_bot():
         if not story or story.get("type") != "story" or "url" not in story:
             continue
 
-        title = story.get("title")
-        url = story.get("url")
-
-        post_to_twitter(title, url)
-
+        post_to_telegram(story["title"], story["url"])
         save_last_posted_id(story_id)
         break
 
 if __name__ == "__main__":
+    run_bot()
+
+def handler(event=None, context=None):
     run_bot()
