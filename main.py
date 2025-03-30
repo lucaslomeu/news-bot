@@ -1,14 +1,12 @@
 import os
 import requests
+import asyncio
 from dotenv import load_dotenv
 from telegram import Bot
 
 load_dotenv()
 
-LAST_ID_PATH = "/tmp/last_id.txt"
-
-bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN"))
-chat_id = os.getenv("TELEGRAM_CHAT_ID")
+LAST_ID_PATH = "/tmp/last_id.txt"  
 
 def get_last_posted_id():
     try:
@@ -31,12 +29,14 @@ def get_story_details(story_id):
     response = requests.get(url)
     return response.json() if response.ok else None
 
-def post_to_telegram(title, url):
+async def post_to_telegram(title, url):
+    bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN")) 
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
     message = f"{title}\n{url}"
-    bot.send_message(chat_id=chat_id, text=message)
-    print("Enviado pro Telegram:", message)
+    await bot.send_message(chat_id=chat_id, text=message)
+    print("Sent to Telegram:", message)
 
-def run_bot():
+async def run_bot():
     last_post_id = get_last_posted_id()
     latest_news = get_latest_stories()
 
@@ -48,12 +48,12 @@ def run_bot():
         if not story or story.get("type") != "story" or "url" not in story:
             continue
 
-        post_to_telegram(story["title"], story["url"])
+        await post_to_telegram(story["title"], story["url"])
         save_last_posted_id(story_id)
         break
 
 if __name__ == "__main__":
-    run_bot()
+    asyncio.run(run_bot())
 
 def handler(event=None, context=None):
-    run_bot()
+    asyncio.run(run_bot())
